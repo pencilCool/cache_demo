@@ -9,17 +9,41 @@
 #import "AppCache.h"
 
 @implementation AppCache
-//
-//+ (NSString *)archivePath
-//{
-//    static NSString *path;
-//    static dispatch_once_t onceToken;
-//    dispatch_once(&onceToken, ^{
-//        
-//    });
-//    
-//    return path;
-//}
+
++ (void)initialize
+{
+    NSString *cacheDirectory = [AppCache cacheDirectory];
+    if(![[NSFileManager defaultManager] fileExistsAtPath:cacheDirectory])
+    {
+        [[NSFileManager defaultManager] createDirectoryAtPath:cacheDirectory
+                                  withIntermediateDirectories:YES
+                                                   attributes:nil
+                                                        error:nil];
+    }
+    double lastSavedCacheVersion = [[NSUserDefaults standardUserDefaults]
+                                    doubleForKey:@"CACHE_VERSION"];
+    double currentAppVersion = [[AppCache appVersion] doubleValue];
+    
+    if( lastSavedCacheVersion == 0.0f || lastSavedCacheVersion <
+       currentAppVersion)
+    {
+        [AppCache clearCache];
+        // assigning current version to preference
+        [[NSUserDefaults standardUserDefaults] setDouble:currentAppVersion
+                                                  forKey:@"CACHE_VERSION"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+    
+}
+
++ (NSString *)cacheDirectory
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
+                                                         NSUserDomainMask, YES);
+    NSString *cacheDirectory = [paths objectAtIndex:0];
+    return cacheDirectory;
+}
+
 
 + (NSArray *)getCachedMenuItems
 {
@@ -66,5 +90,27 @@
                                        attributesOfItemAtPath:archivePath error:nil]
                                       fileModificationDate] timeIntervalSinceNow];
     return  (stalenessLevel > 13.0f);
+}
+
+
++ (NSString *)appVersion
+{
+    CFStringRef versStr =
+    (CFStringRef)CFBundleGetValueForInfoDictionaryKey
+    (CFBundleGetMainBundle(), kCFBundleVersionKey);
+    NSString *version = [NSString stringWithUTF8String:CFStringGetCStringPtr(versStr,kCFStringEncodingMacRoman)];
+    return version;
+                        
+
+}
+
+
++ (void)clearCache
+{
+    NSArray *cacheItems = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[AppCache cacheDirectory] error:nil];
+    for (NSString *path in cacheItems) {
+        [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
+    }
+    
 }
 @end

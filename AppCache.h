@@ -9,8 +9,13 @@
 #import <Foundation/Foundation.h>
 
 @interface AppCache : NSObject
+
++ (NSString *)cachesDirectory;
+
 + (NSArray *)getCachedMenuItems;
 + (void)cacheMenuItems:(NSArray *)items;
 
 + (BOOL ) isMenuItemsStale;
+
++ (void) clearCache;
 @end
