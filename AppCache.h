@@ -10,7 +10,7 @@
 
 @interface AppCache : NSObject
 
-+ (NSString *)cachesDirectory;
+
 
 + (NSArray *)getCachedMenuItems;
 + (void)cacheMenuItems:(NSArray *)items;

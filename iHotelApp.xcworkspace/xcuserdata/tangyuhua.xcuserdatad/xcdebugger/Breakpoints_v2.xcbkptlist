@@ -20,13 +20,45 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "iHotelApp/iHotelAppMenuViewController.m"
-            timestampString = "514206440.372476"
+            timestampString = "514219344.691725"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "47"
-            endingLineNumber = "47"
+            startingLineNumber = "50"
+            endingLineNumber = "50"
             landmarkName = "-viewWillAppear:"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[iHotelAppMenuViewController viewWillAppear:]"
+                  moduleName = "iHotelApp"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/tangyuhua/Documents/ios7ptl-master/ch12-REST/iHotelApp/iHotelApp/iHotelAppMenuViewController.m"
+                  timestampString = "514219344.698546"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "50"
+                  endingLineNumber = "50"
+                  offsetFromSymbolStart = "270">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "__46-[iHotelAppMenuViewController viewWillAppear:]_block_invoke"
+                  moduleName = "iHotelApp"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/tangyuhua/Documents/ios7ptl-master/ch12-REST/iHotelApp/iHotelApp/iHotelAppMenuViewController.m"
+                  timestampString = "514219344.700606"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "50"
+                  endingLineNumber = "50"
+                  offsetFromSymbolStart = "27">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

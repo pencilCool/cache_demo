@@ -8,6 +8,10 @@
 
 #import "AppCache.h"
 
+static NSMutableDictionary *memeoryCache;
+static NSMutableArray *recentlyAccessedKey;
+static int kCacheMemoryLimit;
+
 @implementation AppCache
 
 + (void)initialize
@@ -34,6 +38,18 @@
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
     
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(saveMemoryCacheToDisk:)
+                                                 name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(saveMemoryCacheToDisk:)
+                                                 name: UIApplicationDidEnterBackgroundNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(saveMemoryCacheToDisk:)
+                                                 name: UIApplicationWillTerminateNotification object:nil];
 }
 
 + (NSString *)cacheDirectory
@@ -48,34 +64,52 @@
 + (NSArray *)getCachedMenuItems
 {
     
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
-                                                         NSUserDomainMask, YES);
-    NSString *cachesDirectory = [paths objectAtIndex:0];
-    NSString *archivePath = [cachesDirectory
-                             stringByAppendingPathComponent:@"MenuItems.archive"];
-    
-    
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    
-    if (![fileManager fileExistsAtPath:cachesDirectory]) {
-        
-        [fileManager createDirectoryAtPath:cachesDirectory withIntermediateDirectories:YES attributes:nil error:NULL];
-    }
-    
-    NSMutableArray *cachedItems = [NSKeyedUnarchiver
-                                   unarchiveObjectWithFile:archivePath];
- 
-  
-    return cachedItems;
-  
+    return [NSKeyedUnarchiver unarchiveObjectWithData:[self
+                                                       dataForFile:@"MenuItems.archive"]];
+
 }
 + (void)cacheMenuItems:(NSArray *)items
 {
+    [self cacheData:[NSKeyedArchiver archivedDataWithRootObject:items] toFile:@"MenuItems.archive"];
+    
+    
+    
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
                                                          NSUserDomainMask, YES);
     NSString *cachesDirectory = [paths objectAtIndex:0];
     NSString *archivePath = [cachesDirectory stringByAppendingPathComponent:@"MenuItems.archive"];
     [NSKeyedArchiver archiveRootObject:items toFile:archivePath];
+}
+
++ (void) cacheData: (NSData *)data toFile: (NSString *)fileName {
+    [memeoryCache setObject:data forKey:fileName];
+    if ([recentlyAccessedKey containsObject:fileName]) {
+        [recentlyAccessedKey removeObject:fileName];
+    }
+    [recentlyAccessedKey insertObject:fileName atIndex:0];
+    if ([recentlyAccessedKey count] > kCacheMemoryLimit) {
+        NSString *leastRecentlyUsedDataFilename = [recentlyAccessedKey lastObject];
+        NSData *leastRecentlyUsedCacheData = [memeoryCache objectForKey:leastRecentlyUsedDataFilename];
+        NSString *archivePath = [[AppCache cacheDirectory] stringByAppendingPathComponent:fileName];
+        [leastRecentlyUsedCacheData writeToFile:archivePath atomically:YES];
+        [recentlyAccessedKey removeLastObject];
+        [memeoryCache removeObjectForKey:leastRecentlyUsedDataFilename];
+
+    }
+}
+
++(NSData*) dataForFile:(NSString*) fileName
+{
+    NSData *data = [memeoryCache objectForKey:fileName];
+    if (data) {
+        return data;
+    }
+    NSString *archivePath = [[AppCache cacheDirectory] stringByAppendingPathComponent:fileName];
+    data = [NSData dataWithContentsOfFile:archivePath];
+    if (data) {
+        [self cacheData:data toFile:fileName];
+    }
+    return data;
 }
 
 + (BOOL)isMenuItemsStale {
@@ -112,5 +146,15 @@
         [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
     }
     
+}
+
++ (void)saveMemoryCacheToDisk
+{
+    for (NSString *fileName in [memeoryCache allKeys]) {
+        NSString *archivePath = [[AppCache cacheDirectory] stringByAppendingPathComponent:fileName];
+        NSData *cacheData = [memeoryCache objectForKey:fileName];
+        [cacheData writeToFile:archivePath atomically:YES];
+    }
+    [memeoryCache removeAllObjects];
 }
 @end
