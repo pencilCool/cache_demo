@@ -9,6 +9,7 @@
 #import "iHotelAppMenuViewController.h"
 #import "MenuItem.h"
 #import "iHotelAppAppDelegate.h"
+#import "AppCache.h"
 #define THRESHOLD 13.0
 
 @interface iHotelAppMenuViewController ()
@@ -40,51 +41,19 @@
 }
 
 -(void) viewWillAppear:(BOOL)animated {
-  
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
-                                                          NSUserDomainMask, YES);
-    NSString *cachesDirectory = [paths objectAtIndex:0];
-    NSString *archivePath = [cachesDirectory
-                             stringByAppendingPathComponent:@"MenuItems.archive"];
     
     
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    
-    if (![fileManager fileExistsAtPath:cachesDirectory]) {
-        
-        [fileManager createDirectoryAtPath:cachesDirectory withIntermediateDirectories:YES attributes:nil error:NULL];
-    }
-    
-    NSMutableArray *cachedItems = [NSKeyedUnarchiver
-                                   unarchiveObjectWithFile:archivePath];
-    
-    if(cachedItems == nil)
-    {
-        self.menuItems = [AppDelegate.engine localMenuItems];
-    }
-    else
-    {
-        self.menuItems = cachedItems;
-    }
-    
-    NSTimeInterval stalenessLevel = [[[[NSFileManager defaultManager]
-                                       attributesOfItemAtPath:archivePath error:nil]
-                                      fileModificationDate] timeIntervalSinceNow];
-    if(stalenessLevel > THRESHOLD)
-    {
-        self.menuItems = [AppDelegate.engine localMenuItems];
-         [self.tableView reloadData];
-    }
-    else
-    {
-        
-        [AppDelegate.engine fetchMenuItemsOnSucceeded:^(NSMutableArray *listOfModelBaseObjects) {
-            self.menuItems = listOfModelBaseObjects;
-            [self.tableView reloadData];
-        } onError:^(NSError *engineError) {
-            [UIAlertView showWithError:engineError];
-        }];
-    }
+     self.menuItems = [AppCache getCachedMenuItems];
+     if([AppCache isMenuItemsStale] || !self.menuItems)
+     {
+         
+         [AppDelegate.engine fetchMenuItemsOnSucceeded:^(NSMutableArray *listOfModelBaseObjects) {
+             self.menuItems = listOfModelBaseObjects;
+             [self.tableView reloadData];
+         } onError:^(NSError *engineError) {
+             [UIAlertView showWithError:engineError];
+         }];
+     }
 
   [super viewWillAppear:animated];
 }
@@ -92,12 +61,8 @@
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
-                                                         NSUserDomainMask, YES);
-    NSString *cachesDirectory = [paths objectAtIndex:0];
-    NSString *archivePath = [cachesDirectory stringByAppendingPathComponent:@"MenuItems.archive"];
-    [NSKeyedArchiver archiveRootObject:self.menuItems toFile:archivePath];
-    
+
+    [AppCache cacheMenuItems:self.menuItems];
     [super viewWillDisappear:animated];
 }
 

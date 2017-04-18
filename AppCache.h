@@ -9,5 +9,8 @@
 #import <Foundation/Foundation.h>
 
 @interface AppCache : NSObject
++ (NSArray *)getCachedMenuItems;
++ (void)cacheMenuItems:(NSArray *)items;
 
++ (BOOL ) isMenuItemsStale;
 @end
